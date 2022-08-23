@@ -52,7 +52,7 @@ export default{
       this.blob = URL.createObjectURL(this.selectedFile)
     },
     //getone user
-    async getoneuser() {
+    async getonuser() {
       await axios.get("user/" + this.userId).then((response) => { this.user = response.data}).catch((err) => {
       this.axiosErr = err.response.data.message })
     },

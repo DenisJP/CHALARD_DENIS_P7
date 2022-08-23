@@ -3,7 +3,6 @@
         <!-- navbar component -->
         <NavBarComponent />
         <!-- addone form -->
-        <!-- displaying the form using editState true(a post is behing edit)/false(no post is behing edit) -->
         <form v-if="!editState" class="formPost mediumWrapper" @submit.prevent="addone">
           <!-- addone title-->
           <div class="blockTitle">SENDING A NEW POST</div>
@@ -73,7 +72,6 @@ export default{
       },
       //posts
       posts: [],
-
       //error message
       axiosErr: "POST HAVE BEEN LOAD"
     }
@@ -100,13 +98,11 @@ export default{
       this.selectedFile = event.target.files[0]
       this.blob = URL.createObjectURL(this.selectedFile)
     },
-
     //getall posts
     async getall() {
       await axios.get("post").then((response) => { this.posts = response.data}).catch((err) => {
       this.axiosErr = err.response.data.message })
     },
-
     //deleteone post
     async deleteone(postId) {
     await axios.delete("/post/" + postId)
@@ -114,7 +110,6 @@ export default{
       this.axiosErr = err.response.data.message })
       this.getall()
     },
-
     //addone post
     async addone() {
       //using formData to handle file
@@ -128,7 +123,6 @@ export default{
       this.axiosErr = err.response.data.message })
       this.getall()
     },
-
     //preupdateone
     preupdateone(post) {
       this.postUpdate.content = post.content
@@ -140,7 +134,6 @@ export default{
       this.blob = null
       window.scrollTo(0,0);
     },
-
     //updateone
     async updateone() {
       //using formData to handle file
@@ -155,7 +148,6 @@ export default{
       this.axiosErr = err.response.data.message })
       this.getall()
     },
-
     //dislikeone
     async dislikeone(post){
       await axios.post("/post/"+post._id+"/voteone", {voteType: 0})
@@ -166,7 +158,6 @@ export default{
       }).catch((err) => {
       this.axiosErr = err.response.data.message })
     },
-
     //likeone
     async likeone(post) {
       await axios.post("/post/"+post._id+"/voteone", {voteType: 1})
@@ -190,7 +181,6 @@ export default{
 	position: absolute;
 	z-index: -1;
 }
-
 .postImagePreview{
   height: 100px;
   width: 100%;
@@ -199,7 +189,6 @@ export default{
   border: #222b35 solid 1px;
   border-radius: 4px;
 }
-
 .postFile + label {
   margin-top: 10px;
   display: block;
@@ -211,7 +200,6 @@ export default{
   background-color: #4E5166;
   cursor: pointer;
 }
-
 .post{
   max-width: 600px;
   width: auto;
@@ -225,7 +213,6 @@ export default{
   border-radius: 10px;
   background-color: #383a4b;
 }
-
 .postImage{
   border: #222b35 solid 2px;
   margin-top: 20px;
@@ -235,7 +222,6 @@ export default{
   height: 100px;
   object-fit: cover;
 }
-
 .postManage button{
   float: right;
   padding: 5px;
@@ -246,7 +232,6 @@ export default{
   background-color: #4E5166;
   font-size: 10px;
 }
-
 .postEditBtn {
   border-radius: 5px;
   text-align: center;
@@ -257,7 +242,6 @@ export default{
   margin-right: 10px;
   margin-bottom: 5px;
 }
-
 .postEditBtnC {
   text-transform: capitalize;
   border-radius: 5px;
@@ -268,21 +252,18 @@ export default{
   margin-top: 5px;
   margin-bottom: 5px;
 }
-
 .postDate {
   text-align: left;
   font-weight: bold;
   font-size: 10px;
   color: #FFD7D7;
 }
-
 .postAuthor {
   text-align: left;
   font-weight: bold;
   font-size: 12px;
   color: #42b883;
 }
-
 .postContent {
   text-align: left;
   margin-top: 10px;
