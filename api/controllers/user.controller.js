@@ -47,10 +47,24 @@ exports.addone = (req, res) => {
                 console.log("\x1b[33m%s\x1b[0m", token)
 
                 //sending back the userId,email,token as a response
-                res.status(200).send({ userId: user._id, email: user.email, token: token })
+                res.status(200).send({ user: user, token: token })
                 console.log("user add as been process")
             })
         }) 
+    })
+}
+
+//GETROLE
+exports.getrole = (req, res) => {
+    console.log("\x1b[35m%s\x1b[0m", "::user.controller.getrole")
+
+    User.findOne({ _id: req.params.id}).exec((err, user ) => {
+        if (err) {res.status(500).send({ message: "error while signin you" }); return} //unknow error
+        if (!user) {res.status(404).send({ message: "user does not exist" }); return}//user does not exist
+
+        //sending back the userId,email,token as a response
+        res.status(200).send(user)
+        console.log("user search as been process")
     })
 }
 
@@ -75,7 +89,7 @@ exports.signin = (req, res) => {
         let token = jwt.sign({ id: user._id }, config.SECRET, { expiresIn: 86400 })
 
         //sending back the userId,email,token as a response
-        res.status(200).send({ userId: user._id, email: user.email, token: token })
+        res.status(200).send({ user: user, token: token })
         console.log("user signin as been process")
     })
 }

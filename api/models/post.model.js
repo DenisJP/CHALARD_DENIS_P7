@@ -10,7 +10,8 @@ const Post = mongoose.model(
         usersLiked: { type: [String], required: true },
         usersDisliked: { type: [String], required: true },
         imageUrl: { type: String, required: false},
-        date: { type: Date, default: Date.now , required: true}
+        date: { type: Date, default: Date.now , required: true},
+        user: [{ type: mongoose.Schema.Types.ObjectId, ref: "User"}]
     })
 )
 module.exports = Post

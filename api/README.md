@@ -45,6 +45,7 @@ For DATABASE the API use MongoDB Atlas and the library Mongoose
 | email     	| string 	| true     	| true   	| none    	|
 | imageUrl      | string    | false    	| false  	| none     	|
 | password  	| string 	| true     	| false   	| none    	|  
+| role      	| string 	| true     	| false   	| 'USER'   	|  
 
 **post.model.js:** contain the mongoose database schema for post  
 

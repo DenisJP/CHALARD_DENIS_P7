@@ -3,6 +3,7 @@
         <!-- navbar component -->
         <NavBarComponent />
         <!-- addone form -->
+        <!-- displaying the form using editState true(a post is behing edit)/false(no post is behing edit) -->
         <form v-if="!editState" class="formPost mediumWrapper" @submit.prevent="addone">
           <!-- addone title-->
           <div class="blockTitle">SENDING A NEW POST</div>
@@ -25,19 +26,19 @@
           <button v-on:click="editState = false">Cancel the post update</button>
         </form>
         <!-- placeholder for server error message -->
-        <div class="appError">{{ axiosErr }}</div>
+        <div class="appError">{{ this.appError }}</div>
 
         <!-- display a block post foreach post inside posts -->
         <div v-for="post in posts"  :key="post._id" class="post">
           <!-- post mangement button-->
           <div class="postManage">
-            <button v-if="(userId == post.userId)" v-on:click=preupdateone(post)>EDIT</button>
-            <button v-if="(userId == post.userId)" v-on:click=deleteone(post._id)>DELETE</button>
+            <button v-if="(getUser._id == post.user[0]._id) || getUser.role >= 1" v-on:click=preupdateone(post)>EDIT</button>
+            <button v-if="(getUser._id == post.user[0]._id) || getUser.role >= 1" v-on:click=deleteone(post._id)>DELETE</button>
             <button v-on:click="likeone(post)">LIKE <b class="nbLike">{{ post.usersLiked.length }}</b></button>
             <button v-on:click="dislikeone(post)">DISLIKE <b class="nbLike">{{ post.usersDisliked.length }}</b></button>
           </div>
           <!-- main post information -->
-          <div class="postAuthor">{{ "placeholder" }}</div>
+          <div class="postAuthor">{{ post.user[0].username }}</div>
           <div class="postDate">{{ post.date | moment }}</div>
           <img v-if="post.imageUrl" class="postImage" :src="post.imageUrl"/>
           <div class="postContent">{{ post.content }}</div>
@@ -46,21 +47,22 @@
 </template>
 
 <script>
+import { mapGetters, mapMutations } from "vuex"
 //handling date format with moment
 import moment from 'moment'
 export default{
   name: 'Posts',
   data() {
     return {
+      appError: null,
       //degining the edit state
       editState: false,
       //defining empty file
       selectedFile: null,
       blob: null,
-      userId: JSON.parse(localStorage.getItem('user-info')).userId,
+
       //post
       post: { 
-        userId: JSON.parse(localStorage.getItem('user-info')).userId,
         content: ""
       },
       //post update
@@ -72,15 +74,17 @@ export default{
       },
       //posts
       posts: [],
-      //error message
-      axiosErr: "POST HAVE BEEN LOAD"
     }
   },
   mounted() {
-    //redirect user if user is not login
-    if(!localStorage.getItem('user-info')) this.$router.push({name: 'signin'})
+    this.$axios.defaults.headers.common['authorization'] = `Bearer ${ this.getToken }`;
+    //verifying if user is already login
+    if(!this.getToken) this.$router.push({name: 'signin'})
     //getall posts
     this.getall()
+  },
+  computed: {
+    ...mapGetters(['getToken', 'getUser']),
   },
   filters: {
     //reformating the date getting from Mongo Database
@@ -89,6 +93,7 @@ export default{
     },
   },
 	methods: {
+    ...mapMutations(['setToken', 'setUser']),
     //handling date format
     moment: function() {
       return moment();
@@ -98,31 +103,36 @@ export default{
       this.selectedFile = event.target.files[0]
       this.blob = URL.createObjectURL(this.selectedFile)
     },
+
     //getall posts
     async getall() {
       await axios.get("post").then((response) => { this.posts = response.data}).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      this.appError = err.response.data.message})
     },
+
     //deleteone post
     async deleteone(postId) {
     await axios.delete("/post/" + postId)
-      .then((response) => { this.axiosErr = response.data.message }).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      .then((response) => { this.appError = response.data.message }).catch((err) => {
+      this.appError = err.response.data.message })
       this.getall()
     },
+
     //addone post
     async addone() {
       //using formData to handle file
       let post = new FormData();
       post.append('image', this.selectedFile)
-      post.append('userId', this.post.userId)
+      post.append('userId', this.getUser._id)
+      post.append('user', this.getUser._id)
       post.append('content', this.post.content)
       //calling the api on /post/addone with object post
       await axios.post("/post", post)
-      .then((response) => { this.axiosErr = response.data.message, this.post.content = "", this.selectedFile = null }).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      .then((response) => { this.appError = response.data.message, this.post.content = "", this.selectedFile = null }).catch((err) => {
+      this.appError = err.response.data.message })
       this.getall()
     },
+
     //preupdateone
     preupdateone(post) {
       this.postUpdate.content = post.content
@@ -134,39 +144,42 @@ export default{
       this.blob = null
       window.scrollTo(0,0);
     },
+
     //updateone
     async updateone() {
       //using formData to handle file
       let post = new FormData();
       if(this.selectedFile) post.append('image', this.selectedFile)
-      else post.append('removeImage', true)
+      else if(!this.postUpdate.imageUrl) post.append('removeImage', true)
       post.append('userId', this.postUpdate.userId)
       post.append('content', this.postUpdate.content)
       //calling the api on /post/:id with object post
       await axios.put("/post/"+this.postUpdate.id, post)
-      .then((response) => { this.axiosErr = response.data.message, this.post.content = "", this.selectedFile = null, this.editState = false}).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      .then((response) => { this.appError = response.data.message, this.post.content = "", this.selectedFile = null, this.editState = false}).catch((err) => {
+      this.appError = err.response.data.message })
       this.getall()
     },
+
     //dislikeone
     async dislikeone(post){
       await axios.post("/post/"+post._id+"/voteone", {voteType: 0})
       .then((response) => {
         post.usersLiked = response.data.updateLike
         post.usersDisliked = response.data.updateDislike
-        this.axiosErr = response.data.message
+        this.appError = response.data.message
       }).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      this.appError = err.response.data.message })
     },
+
     //likeone
     async likeone(post) {
       await axios.post("/post/"+post._id+"/voteone", {voteType: 1})
       .then((response) => {
         post.usersLiked = response.data.updateLike
         post.usersDisliked = response.data.updateDislike
-        this.axiosErr = response.data.message
+        this.appError = response.data.message
       }).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      this.appError = err.response.data.message })
     }
   }
 }
@@ -181,6 +194,7 @@ export default{
 	position: absolute;
 	z-index: -1;
 }
+
 .postImagePreview{
   height: 100px;
   width: 100%;
@@ -189,6 +203,7 @@ export default{
   border: #222b35 solid 1px;
   border-radius: 4px;
 }
+
 .postFile + label {
   margin-top: 10px;
   display: block;
@@ -200,6 +215,7 @@ export default{
   background-color: #4E5166;
   cursor: pointer;
 }
+
 .post{
   max-width: 600px;
   width: auto;
@@ -213,6 +229,7 @@ export default{
   border-radius: 10px;
   background-color: #383a4b;
 }
+
 .postImage{
   border: #222b35 solid 2px;
   margin-top: 20px;
@@ -222,6 +239,7 @@ export default{
   height: 100px;
   object-fit: cover;
 }
+
 .postManage button{
   float: right;
   padding: 5px;
@@ -232,6 +250,7 @@ export default{
   background-color: #4E5166;
   font-size: 10px;
 }
+
 .postEditBtn {
   border-radius: 5px;
   text-align: center;
@@ -242,6 +261,7 @@ export default{
   margin-right: 10px;
   margin-bottom: 5px;
 }
+
 .postEditBtnC {
   text-transform: capitalize;
   border-radius: 5px;
@@ -252,18 +272,21 @@ export default{
   margin-top: 5px;
   margin-bottom: 5px;
 }
+
 .postDate {
   text-align: left;
   font-weight: bold;
   font-size: 10px;
   color: #FFD7D7;
 }
+
 .postAuthor {
   text-align: left;
   font-weight: bold;
   font-size: 12px;
-  color: #42b883;
+  color: #ec5b3d;
 }
+
 .postContent {
   text-align: left;
   margin-top: 10px;

@@ -13,15 +13,17 @@
             <button class="valid">Signup</button>
         </form>
         <!-- placeholder for server error message -->
-        <div class="appError">{{ axiosErr }}</div>
+        <div class="appError">{{ this.appError }}</div>
     </div>
 </template>
 
 <script>
+import { mapGetters, mapMutations } from "vuex"
 export default{
   name: 'SignUp',
   data() {
     return {
+      appError: null,
       //user object
       user: {
         username: "",
@@ -29,33 +31,34 @@ export default{
         password: "",
         passwordVerification: ""
       },
-      //userStorage
-      userStorage: localStorage.getItem('user-info'),
-
-      //error message
-      axiosErr: null
     }
   },
   mounted() {
     //verifying if user is already login
-    if(this.userStorage) this.$router.push({name: 'home'})
+    if(this.getToken) this.$router.push({name: 'posts'})
   },
   methods: {
+    ...mapMutations(['setToken', 'setUser']),
+
     //addon user
     async addone() {
         //calling the api on /user/addone with object user
         this.$axios.post('/user/addone', this.user)
         .then((response) => {
-          //storing JWT Api response inside localStorage
-          localStorage.setItem('user-info', JSON.stringify(response.data))
+          //storing JWT Api response inside vuex
+          this.setUser(response.data.user)
+          this.setToken(response.data.token)
           //redirecting the user
           this.$router.push({name: 'posts'})
         })
         .catch((err) => {
           //display server error message
-          this.axiosErr = err.response.data.message
+          this.appError = err.response.data.message
         })
       }
+    },
+    computed: {
+      ...mapGetters(['getToken']),
     }
   }
 </script>

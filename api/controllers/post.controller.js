@@ -12,7 +12,7 @@ exports.getall = (req, res) => {
     console.log("\x1b[35m%s\x1b[0m", "::post.controller.getall")
 
     //searching all post
-    Post.find({}).sort({date: -1}).exec((err, posts) => { //date: -1 for sorting them new to old
+    Post.find({}).sort({date: -1}).populate('user').exec((err, posts) => { //date: -1 for sorting them new to old
         if (err) { res.status(500).send({ message: "error while seaching all posts" }); return } //unknow error
 
         //sending posts object as a response
@@ -29,7 +29,8 @@ exports.getone = (req, res, next) => {
     //searching the post with the request id
     Post.findOne({
         _id: req.params.id,
-    }).exec((err, post) => {
+    }).populate('user')
+    .exec((err, post) => {
         if (err) {res.status(500).send({ message: "error while searching the post" }); return} //unknow error
         if (!post) {res.status(404).send({ message: "post does not exist" }); return} //user not found
 

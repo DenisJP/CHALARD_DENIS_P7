@@ -2,10 +2,9 @@
 
 import Vue from 'vue';
 import axios from "axios";
-
+import { mapGetters, mapMutations } from "vuex"
 // Full config:  https://github.com/axios/axios#request-config
 //axios.defaults.baseURL = "http://localhost:3000/api/"
-//axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
 //axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
 let config = {
@@ -19,9 +18,6 @@ const _axios = axios.create(config);
 _axios.interceptors.request.use(
   function(config) {
     // Do something before request is sent
-    let token = localStorage.getItem('user-info');
-    if(token)
-      config.headers.common['authorization'] = `Bearer ${ JSON.parse(token).token }`;
     return config;
   },
   function(error) {

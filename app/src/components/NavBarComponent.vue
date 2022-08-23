@@ -1,26 +1,27 @@
 <template>
     <nav>
-      <router-link v-if="userStorage" to="/">Posts</router-link>
-      <router-link v-if="userStorage" to="/profil">Profil</router-link>
-      <router-link v-if="!userStorage" to="/signin">Signin</router-link>
-      <router-link v-if="!userStorage" to="/signup">Signup</router-link>
-      <a v-on:click="signout" v-if="userStorage" href="#">Signout</a>
+      <router-link v-if="getToken" to="/">Posts</router-link>
+      <router-link v-if="getToken" to="/profil">Profil</router-link>
+      <router-link v-if="!getToken" to="/signin">Signin</router-link>
+      <router-link v-if="!getToken" to="/signup">Signup</router-link>
+      <a v-on:click="signout" v-if="getToken" href="#">Signout</a>
     </nav>
 </template>
 
 <script>
+import { mapGetters, mapMutations } from "vuex"
 export default{
   name: 'NavBar',
-  data() {
-    return {
-      userStorage: localStorage.getItem('user-info')
-    }
-  },
   methods: {
+    ...mapMutations(['setToken', 'setUser']),
     signout () {
-      localStorage.clear()
+      this.setToken(null)
+      this.setUser(null)
       this.$router.push({name: 'signin'})
     }
+  },
+  computed: {
+    ...mapGetters(['getToken', 'getUser']),
   }
 }
 </script>

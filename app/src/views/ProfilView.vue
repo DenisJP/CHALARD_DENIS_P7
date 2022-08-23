@@ -15,46 +15,45 @@
           <button>Update your profil</button>
         </form>
         <!-- placeholder for server error message -->
-        <div class="appError">{{ axiosErr }}</div>
+        <div class="appError">{{ this.appError }}</div>
   </div>
 </template>
 
 <script>
+import { mapGetters, mapMutations } from "vuex"
 export default{
   name: 'Profil',
   data() {
     return {
+      appError: null,
       //defining empty file
       selectedFile: null,
       blob: null,
-      axiosErr: null,
-      userId: JSON.parse(localStorage.getItem('user-info')).userId,
       //user
-      user: {
-        username: null,
-        email: null,
-        imageUrl: null
-      },
-      //error message
-      axiosErr: ""
+      user: {imageUrl: null}
     }
   },
+  computed: {
+    ...mapGetters(['getToken', 'getUser']),
+  },
   mounted() {
-    //redirect user if user is not login
-    if(!localStorage.getItem('user-info')) this.$router.push({name: 'signin'})
+    this.$axios.defaults.headers.common['authorization'] = `Bearer ${ this.getToken }`;
+    //verifying if user is already login
+    if(!this.getToken) this.$router.push({name: 'signin'})
     //getall posts
-    this.getonuser()
+    this.user = this.getUser
   },
 	methods: {
+    ...mapMutations(['setToken', 'setUser']),
     //handling file change and select
     onFileSelected(event){
       this.selectedFile = event.target.files[0]
       this.blob = URL.createObjectURL(this.selectedFile)
     },
     //getone user
-    async getonuser() {
-      await axios.get("user/" + this.userId).then((response) => { this.user = response.data}).catch((err) => {
-      this.axiosErr = err.response.data.message })
+    async getoneuser() {
+      await axios.get("user/" + this.user._id).then((response) => { this.setUser(response.data)}).catch((err) => {
+      this.appError = err.response.data.message })
     },
     //updateone user
     async updateone() {
@@ -64,9 +63,10 @@ export default{
       else if(!this.user.imageUrl) user.append('removeImage', true)
       user.append('username', this.user.username)
       user.append('email', this.user.email)
-      await axios.put("user/" + this.userId, user)
-      .then((response) => { this.axiosErr = response.data.message}).catch((err) => {
-      this.axiosErr = err.response.data.message })
+      await axios.put("user/" + this.user._id, user)
+      .then((response) => { this.appError = response.data.message}).catch((err) => {
+      this.appError = err.response.data.message })
+      this.setUser(this.getoneuser())
     },
   }
 }
